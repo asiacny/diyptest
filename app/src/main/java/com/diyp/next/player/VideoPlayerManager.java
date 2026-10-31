@@ -35,6 +35,7 @@ import androidx.media3.exoplayer.Renderer;
 import androidx.media3.exoplayer.audio.AudioRendererEventListener;
 import androidx.media3.exoplayer.audio.AudioSink;
 import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer;
+import androidx.media3.exoplayer.mediacodec.MediaCodecAdapter;
 import androidx.media3.exoplayer.mediacodec.MediaCodecInfo;
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector;
 import java.lang.reflect.Constructor;
@@ -103,6 +104,8 @@ public class VideoPlayerManager {
         public String audioCodec = "";      // e.g. "MP2", "AAC", "AC3", "E-AC3"
         public String audioChannels = "";   // e.g. "立体声", "5.1 声道", "单声道"
         public String bitrate = "";         // e.g. "8.9 Mbps"
+        public String videoDecode = "";     // e.g. "视频硬解", "视频软解"
+        public String audioDecode = "";     // e.g. "音频硬解", "音频软解"
 
         public void reset() {
             resolution = "";
@@ -112,6 +115,8 @@ public class VideoPlayerManager {
             audioCodec = "";
             audioChannels = "";
             bitrate = "";
+            // videoDecode/audioDecode persist across streams: a reused decoder fires no
+            // new init callback, so clearing them here would lose the correct state
         }
 
         public String getFormattedText() {
@@ -155,6 +160,8 @@ public class VideoPlayerManager {
             if (audioCodec != null && !audioCodec.isEmpty()) tags.add(audioCodec);
             if (audioChannels != null && !audioChannels.isEmpty()) tags.add(audioChannels);
             if (bitrate != null && !bitrate.isEmpty()) tags.add(bitrate);
+            if (videoDecode != null && !videoDecode.isEmpty()) tags.add(videoDecode);
+            if (audioDecode != null && !audioDecode.isEmpty()) tags.add(audioDecode);
             return tags;
         }
     }
@@ -276,6 +283,16 @@ public class VideoPlayerManager {
                         MAX_DROPPED_VIDEO_FRAME_COUNT_TO_NOTIFY
                 ) {
                     @Override
+                    protected void onCodecInitialized(
+                            String name,
+                            MediaCodecAdapter.Configuration configuration,
+                            long initializedTimestampMs,
+                            long initializationDurationMs) {
+                        super.onCodecInitialized(name, configuration, initializedTimestampMs, initializationDurationMs);
+                        updateDecodeMode(true, name, getCodecInfo());
+                    }
+
+                    @Override
                     protected DecoderReuseEvaluation canReuseCodec(
                             MediaCodecInfo codecInfo, Format oldFormat, Format newFormat) {
                         String name = (codecInfo != null && codecInfo.name != null) ? codecInfo.name.toLowerCase(Locale.ROOT) : "";
@@ -341,9 +358,8 @@ public class VideoPlayerManager {
                 };
 
                 if (audioMode == 0) { // 智能硬解 (硬件优先，自动软解回退，与视频解码选项一致)
-                    out.add(new MediaCodecAudioRenderer(
+                    out.add(createTrackedAudioRenderer(
                             context,
-                            getCodecAdapterFactory(),
                             safeAudioSelector,
                             enableDecoderFallback,
                             eventHandler,
@@ -358,7 +374,7 @@ public class VideoPlayerManager {
                                 AudioRendererEventListener.class,
                                 AudioSink.class
                         );
-                        Renderer ffmpegRenderer = (Renderer) constructor.newInstance(eventHandler, eventListener, audioSink);
+                        Renderer ffmpegRenderer = (Renderer) constructor.newInstance(eventHandler, trackedFfmpegListener(eventListener), audioSink);
                         out.add(ffmpegRenderer);
                     } catch (Exception ignored) {}
                 } else if (audioMode == 1) { // 软解优先 (FFmpeg 强力软解)
@@ -370,7 +386,7 @@ public class VideoPlayerManager {
                                 AudioRendererEventListener.class,
                                 AudioSink.class
                         );
-                        Renderer ffmpegRenderer = (Renderer) constructor.newInstance(eventHandler, eventListener, audioSink);
+                        Renderer ffmpegRenderer = (Renderer) constructor.newInstance(eventHandler, trackedFfmpegListener(eventListener), audioSink);
                         out.add(ffmpegRenderer);
                         Log.i("VideoPlayerManager", "Loaded FfmpegAudioRenderer as primary audio renderer");
                     } catch (Exception e) {
@@ -378,9 +394,8 @@ public class VideoPlayerManager {
                     }
 
                     // 2. Add MediaCodecAudioRenderer with safe selector as fallback
-                    out.add(new MediaCodecAudioRenderer(
+                    out.add(createTrackedAudioRenderer(
                             context,
-                            getCodecAdapterFactory(),
                             safeAudioSelector,
                             enableDecoderFallback,
                             eventHandler,
@@ -388,9 +403,8 @@ public class VideoPlayerManager {
                             audioSink
                     ));
                 } else { // 系统原生 (仅系统硬解/RAW直通)
-                    out.add(new MediaCodecAudioRenderer(
+                    out.add(createTrackedAudioRenderer(
                             context,
-                            getCodecAdapterFactory(),
                             mediaCodecSelector,
                             enableDecoderFallback,
                             eventHandler,
@@ -398,6 +412,35 @@ public class VideoPlayerManager {
                             audioSink
                     ));
                 }
+            }
+
+            private MediaCodecAudioRenderer createTrackedAudioRenderer(
+                    Context context,
+                    MediaCodecSelector selector,
+                    boolean enableDecoderFallback,
+                    Handler eventHandler,
+                    AudioRendererEventListener eventListener,
+                    AudioSink audioSink
+            ) {
+                return new MediaCodecAudioRenderer(
+                        context,
+                        getCodecAdapterFactory(),
+                        selector,
+                        enableDecoderFallback,
+                        eventHandler,
+                        eventListener,
+                        audioSink
+                ) {
+                    @Override
+                    protected void onCodecInitialized(
+                            String name,
+                            MediaCodecAdapter.Configuration configuration,
+                            long initializedTimestampMs,
+                            long initializationDurationMs) {
+                        super.onCodecInitialized(name, configuration, initializedTimestampMs, initializationDurationMs);
+                        updateDecodeMode(false, name, getCodecInfo());
+                    }
+                };
             }
 
             @Override
@@ -575,6 +618,53 @@ public class VideoPlayerManager {
                 }
             }
         });
+    }
+
+    private AudioRendererEventListener trackedFfmpegListener(@Nullable AudioRendererEventListener delegate) {
+        return new AudioRendererEventListener() {
+            @Override
+            public void onAudioDecoderInitialized(String decoderName, long initializedTimestampMs, long initializationDurationMs) {
+                updateDecodeMode(false, decoderName, null);
+                if (delegate != null) {
+                    delegate.onAudioDecoderInitialized(decoderName, initializedTimestampMs, initializationDurationMs);
+                }
+            }
+
+            @Override
+            public void onAudioCodecError(Exception audioCodecError) {
+                if (delegate != null) {
+                    delegate.onAudioCodecError(audioCodecError);
+                }
+            }
+        };
+    }
+
+    private void updateDecodeMode(boolean video, String decoderName, MediaCodecInfo codecInfo) {
+        String mode = classifyDecodeMode(decoderName, codecInfo);
+        if (mode.isEmpty()) return;
+        String tag = (video ? "视频" : "音频") + mode;
+        mainHandler.post(() -> {
+            if (video) {
+                if (tag.equals(currentStreamInfo.videoDecode)) return;
+                currentStreamInfo.videoDecode = tag;
+            } else {
+                if (tag.equals(currentStreamInfo.audioDecode)) return;
+                currentStreamInfo.audioDecode = tag;
+            }
+            if (listener != null) {
+                listener.onStreamInfoUpdated(currentStreamInfo);
+            }
+        });
+    }
+
+    private static String classifyDecodeMode(String decoderName, MediaCodecInfo codecInfo) {
+        if (codecInfo != null) {
+            return (codecInfo.hardwareAccelerated && !codecInfo.softwareOnly) ? "硬解" : "软解";
+        }
+        if (decoderName != null && decoderName.toLowerCase(Locale.ROOT).startsWith("ffmpeg")) {
+            return "软解";
+        }
+        return "";
     }
 
     private boolean extractVideoInfo(Format format) {
