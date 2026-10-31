@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -79,6 +80,8 @@ public class PlayerActivity extends AppCompatActivity {
     private ImageView bannerIvLogo;
     private View bannerScrollStreamTags;
     private LinearLayout bannerLayoutStreamTags;
+    private float bannerScale = 1f; // 信息框相对 XML 基准宽度的累计缩放比例
+    private float bannerBaseWidth; // XML 基准宽度(px)，首次应用时记录
 
     // Time-Shift Floating Header Views
     private View layoutTimeshiftHeader;
@@ -300,6 +303,8 @@ public class PlayerActivity extends AppCompatActivity {
         bannerScrollStreamTags = findViewById(R.id.banner_scroll_stream_tags);
         bannerLayoutStreamTags = findViewById(R.id.banner_layout_stream_tags);
 
+        applyBannerSize();
+
         // Time-Shift floating header views
         layoutTimeshiftHeader = findViewById(R.id.layout_timeshift_header);
         tvTimeshiftDynamicStatus = findViewById(R.id.tv_timeshift_dynamic_status);
@@ -353,6 +358,67 @@ public class PlayerActivity extends AppCompatActivity {
 
         // Load boot splash image
         loadSplashImage();
+    }
+
+    private void applyBannerSize() {
+        if (layoutBanner == null) return;
+        int size = settings.getBannerSize();
+        float pct = size == 0 ? 0.5f : (size == 1 ? 0.75f : 1.0f);
+        int targetWidth = Math.round(getResources().getDisplayMetrics().widthPixels * pct);
+        ViewGroup.LayoutParams lp = layoutBanner.getLayoutParams();
+        if (lp == null) return;
+        if (bannerBaseWidth <= 0) bannerBaseWidth = lp.width;
+        float scale = targetWidth / bannerBaseWidth;
+        float ratio = scale / bannerScale;
+        lp.width = targetWidth;
+        layoutBanner.setLayoutParams(lp);
+        if (Math.abs(ratio - 1f) > 0.001f) {
+            scaleBannerView(layoutBanner, ratio, true);
+            bannerScale = scale;
+        }
+    }
+
+    private void scaleBannerView(View view, float ratio, boolean isRoot) {
+        if (view == null) return;
+        ViewGroup.LayoutParams lp = view.getLayoutParams();
+        if (!isRoot) {
+            if (lp instanceof ViewGroup.MarginLayoutParams) {
+                ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) lp;
+                int marginStart = mlp.getMarginStart();
+                int marginEnd = mlp.getMarginEnd();
+                mlp.setMargins(
+                        Math.round(mlp.leftMargin * ratio),
+                        Math.round(mlp.topMargin * ratio),
+                        Math.round(mlp.rightMargin * ratio),
+                        Math.round(mlp.bottomMargin * ratio));
+                if (mlp.isMarginRelative()) {
+                    mlp.setMarginStart(Math.round(marginStart * ratio));
+                    mlp.setMarginEnd(Math.round(marginEnd * ratio));
+                }
+            }
+            if (lp != null) {
+                if (lp.width > 0) lp.width = Math.round(lp.width * ratio);
+                if (lp.height > 0) lp.height = Math.round(lp.height * ratio);
+            }
+        }
+        if (lp != null) {
+            view.setLayoutParams(lp);
+        }
+        view.setPadding(
+                Math.round(view.getPaddingLeft() * ratio),
+                Math.round(view.getPaddingTop() * ratio),
+                Math.round(view.getPaddingRight() * ratio),
+                Math.round(view.getPaddingBottom() * ratio));
+        if (view instanceof TextView) {
+            TextView tv = (TextView) view;
+            tv.setTextSize(TypedValue.COMPLEX_UNIT_PX, tv.getTextSize() * ratio);
+        }
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                scaleBannerView(group.getChildAt(i), ratio, false);
+            }
+        }
     }
 
     private void initPlayer() {
@@ -467,6 +533,9 @@ public class PlayerActivity extends AppCompatActivity {
             } else {
                 badge.setBackgroundResource(R.drawable.bg_stream_badge);
                 badge.setTextColor(0xFF00D2FF);
+            }
+            if (bannerScale != 1f) {
+                scaleBannerView(badge, bannerScale, false);
             }
             bannerLayoutStreamTags.addView(badge);
         }
@@ -783,6 +852,7 @@ public class PlayerActivity extends AppCompatActivity {
     private void showChannelBanner(Channel channel) {
         if (channel == null) return;
 
+        applyBannerSize();
         bannerTvNumber.setText(String.valueOf(channel.getNumber()));
         bannerTvName.setText(channel.getName());
         bannerTvSource.setText(channel.getCurrentSourceDisplayName());

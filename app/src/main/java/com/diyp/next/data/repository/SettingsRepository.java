@@ -36,8 +36,15 @@ public class SettingsRepository {
     public static final String KEY_SAVED_SOURCE_PREFIX = "saved_source_";
     public static final String KEY_PRELOAD_ENABLED = "preload_enabled";
     public static final String KEY_OK_KEY_ACTION = "ok_key_action"; // 0: 打开列表 (默认), 1: 显示信息条
+    public static final String KEY_BANNER_SIZE = "banner_size"; // 0: 小(屏幕50%), 1: 中(屏幕75%), 2: 大(屏幕100%)
 
     public static final String[] OK_ACTION_OPTIONS = {"打开列表", "显示信息条"};
+
+    public static final String[] BANNER_SIZE_OPTIONS = {
+        "小 (屏幕宽度 50%)",
+        "中 (屏幕宽度 75%)",
+        "大 (屏幕宽度 100%)"
+    };
 
     public static final String[] DISCONNECT_OPTIONS = {
         "关闭",
@@ -336,5 +343,13 @@ public class SettingsRepository {
 
     public void setOkKeyAction(int action) {
         sp.edit().putInt(KEY_OK_KEY_ACTION, action).apply();
+    }
+
+    public int getBannerSize() {
+        return sp.getInt(KEY_BANNER_SIZE, 1); // 默认中
+    }
+
+    public void setBannerSize(int size) {
+        sp.edit().putInt(KEY_BANNER_SIZE, size).apply();
     }
 }

@@ -138,6 +138,7 @@ public class SettingsDialog extends Dialog {
         Button btnSubtitle = findViewById(R.id.btn_setting_subtitle);
         Button btnLogoMode = findViewById(R.id.btn_setting_logo_mode);
         Button btnHideBottomLogo = findViewById(R.id.btn_setting_hide_bottom_logo);
+        Button btnBannerSize = findViewById(R.id.btn_setting_banner_size);
         Button btnOkAction = findViewById(R.id.btn_setting_ok_action);
         Button btnReverse = findViewById(R.id.btn_setting_reverse);
         Button btnBoot = findViewById(R.id.btn_setting_boot);
@@ -181,6 +182,7 @@ public class SettingsDialog extends Dialog {
         updateSubtitleLabel(btnSubtitle);
         updateLogoModeLabel(btnLogoMode);
         updateHideBottomLogoLabel(btnHideBottomLogo);
+        updateBannerSizeLabel(btnBannerSize);
         updateOkActionLabel(btnOkAction);
         updateReverseLabel(btnReverse);
         updateBootLabel(btnBoot);
@@ -443,6 +445,16 @@ public class SettingsDialog extends Dialog {
             });
         }
 
+        if (btnBannerSize != null) {
+            btnBannerSize.setOnClickListener(v -> {
+                OptionSelectionDialog.show(getContext(), "信息框大小", SettingsRepository.BANNER_SIZE_OPTIONS, settings.getBannerSize(), (idx, text) -> {
+                    settings.setBannerSize(idx);
+                    updateBannerSizeLabel(btnBannerSize);
+                    if (callback != null) callback.onSettingChanged();
+                });
+            });
+        }
+
         if (btnOkAction != null) {
             btnOkAction.setOnClickListener(v -> {
                 int cur = settings.getOkKeyAction();
@@ -540,6 +552,7 @@ public class SettingsDialog extends Dialog {
             settings.setOkKeyAction(0);
             settings.setLogoMode(0);
             settings.setHideBottomLogo(false);
+            settings.setBannerSize(1);
             settings.setCustomLogoUrl("");
             settings.setReverseSwitch(false);
             settings.setShowSpeed(true);
@@ -780,6 +793,13 @@ public class SettingsDialog extends Dialog {
     private void updateHideBottomLogoLabel(Button b) {
         if (b == null) return;
         b.setText("底栏台标: " + (settings.isHideBottomLogo() ? "隐藏" : "开启显示"));
+    }
+
+    private void updateBannerSizeLabel(Button b) {
+        if (b == null) return;
+        int size = settings.getBannerSize();
+        if (size < 0 || size >= SettingsRepository.BANNER_SIZE_OPTIONS.length) size = 1;
+        b.setText("信息框大小: " + SettingsRepository.BANNER_SIZE_OPTIONS[size]);
     }
 
     private void updateOkActionLabel(Button b) {

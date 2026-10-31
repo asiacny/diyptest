@@ -339,6 +339,19 @@
                 android:paddingStart="12dp"
                 android:layout_marginBottom="6dp" />
 
+            <!-- 换台信息框大小 -->
+            <Button
+                android:id="@+id/btn_setting_banner_size"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="信息框大小: 中 (屏幕宽度 75%)"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
             <!-- 显示网速 -->
             <Button
                 android:id="@+id/btn_setting_speed"
