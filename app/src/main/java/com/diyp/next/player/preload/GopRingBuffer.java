@@ -120,9 +120,12 @@ public class GopRingBuffer {
         synchronized (lock) {
             if (isClosed || gen != generation) return;
 
-            // Copy data into ring buffer
-            for (int i = 0; i < length; i++) {
-                buffer[(int) ((totalWritten + i) % CAPACITY)] = data[offset + i];
+            // Bulk copy into ring buffer (two segments when wrapping past the end)
+            int startPos = (int) (totalWritten % CAPACITY);
+            int firstPart = Math.min(length, CAPACITY - startPos);
+            System.arraycopy(data, offset, buffer, startPos, firstPart);
+            if (firstPart < length) {
+                System.arraycopy(data, offset + firstPart, buffer, 0, length - firstPart);
             }
             totalWritten += length;
 
@@ -333,14 +336,17 @@ public class GopRingBuffer {
                 return -1; // End of stream
             }
 
-            int available = (int) (totalWritten - readPos);
+            long available = totalWritten - readPos;
             if (available <= 0) {
                 return isClosed ? -1 : 0;
             }
 
-            int toRead = Math.min(length, available);
-            for (int i = 0; i < toRead; i++) {
-                out[offset + i] = buffer[(int) ((readPos + i) % CAPACITY)];
+            int toRead = (int) Math.min(Math.min(length, available), CAPACITY);
+            int startPos = (int) (readPos % CAPACITY);
+            int firstPart = Math.min(toRead, CAPACITY - startPos);
+            System.arraycopy(buffer, startPos, out, offset, firstPart);
+            if (firstPart < toRead) {
+                System.arraycopy(buffer, 0, out, offset + firstPart, toRead - firstPart);
             }
             readPos += toRead;
             return toRead;
