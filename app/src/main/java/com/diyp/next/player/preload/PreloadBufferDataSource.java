@@ -20,6 +20,7 @@ import java.util.Map;
 @OptIn(markerClass = UnstableApi.class)
 public class PreloadBufferDataSource extends BaseDataSource {
     private final PreloadWorker worker;
+    private final long ringGeneration;
     private DataSpec dataSpec;
     private boolean opened = false;
     private boolean released = false;
@@ -27,6 +28,7 @@ public class PreloadBufferDataSource extends BaseDataSource {
     public PreloadBufferDataSource(PreloadWorker worker) {
         super(/* isNetwork= */ true);
         this.worker = worker;
+        this.ringGeneration = (worker != null) ? worker.getRingBuffer().getGeneration() : -1;
     }
 
     @Override
@@ -56,7 +58,7 @@ public class PreloadBufferDataSource extends BaseDataSource {
             return C.RESULT_END_OF_INPUT;
         }
 
-        int bytesRead = worker.getRingBuffer().read(buffer, offset, length);
+        int bytesRead = worker.getRingBuffer().read(buffer, offset, length, ringGeneration);
         if (bytesRead > 0) {
             bytesTransferred(bytesRead);
             return bytesRead;

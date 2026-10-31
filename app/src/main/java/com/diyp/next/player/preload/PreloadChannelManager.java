@@ -241,6 +241,7 @@ public class PreloadChannelManager {
         activeWorkers.clear();
         currentTargets.clear();
         playingUrl = "";
+        GopRingBuffer.clearPool();
         Log.d(TAG, "All preload workers stopped");
     }
 

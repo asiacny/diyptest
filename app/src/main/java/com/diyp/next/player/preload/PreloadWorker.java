@@ -20,6 +20,7 @@ public class PreloadWorker implements Runnable {
     private final String streamUrl;
     private final Map<String, String> headers;
     private final GopRingBuffer ringBuffer;
+    private final long ringGeneration;
 
     private volatile boolean isRunning = true;
     private volatile boolean isAborted = false;
@@ -28,13 +29,15 @@ public class PreloadWorker implements Runnable {
     private HttpURLConnection connection;
     private InputStream inputStream;
     private Thread workerThread;
+    private boolean bufferReleased = false;
 
     public PreloadWorker(String channelName, int sourceIndex, String streamUrl, Map<String, String> headers) {
         this.channelName = channelName;
         this.sourceIndex = sourceIndex;
         this.streamUrl = streamUrl;
         this.headers = headers;
-        this.ringBuffer = new GopRingBuffer();
+        this.ringBuffer = GopRingBuffer.obtain();
+        this.ringGeneration = ringBuffer.getGeneration();
     }
 
     public synchronized void start() {
@@ -96,7 +99,7 @@ public class PreloadWorker implements Runnable {
                 if (read < 0) {
                     break; // Stream ended
                 }
-                ringBuffer.write(buf, 0, read);
+                ringBuffer.write(buf, 0, read, ringGeneration);
             }
         } catch (Exception e) {
             if (isRunning) {
@@ -104,18 +107,32 @@ public class PreloadWorker implements Runnable {
             }
         } finally {
             disconnectSilently();
-            ringBuffer.close();
+            freezeRingBuffer();
         }
     }
 
     public synchronized void stop() {
         isRunning = false;
         disconnectSilently();
-        ringBuffer.close();
         if (workerThread != null) {
             workerThread.interrupt();
             workerThread = null;
         }
+        releaseRingBuffer();
+    }
+
+    private synchronized void freezeRingBuffer() {
+        if (!bufferReleased) {
+            ringBuffer.close();
+        }
+    }
+
+    private synchronized void releaseRingBuffer() {
+        if (bufferReleased) {
+            return;
+        }
+        bufferReleased = true;
+        ringBuffer.release();
     }
 
     private void disconnectSilently() {
@@ -151,12 +168,12 @@ public class PreloadWorker implements Runnable {
     }
 
     public boolean isReady() {
-        return isConnected && !isAborted && ringBuffer.hasKeyframe();
+        return isConnected && !isAborted && ringBuffer.hasKeyframe()
+                && ringBuffer.isOwnedBy(ringGeneration);
     }
 
     public boolean isUsable() {
-        return isRunning && isConnected && !isAborted
-                && ringBuffer.hasKeyframe() && !ringBuffer.isClosed();
+        return isRunning && isReady();
     }
 
     public boolean isAborted() {

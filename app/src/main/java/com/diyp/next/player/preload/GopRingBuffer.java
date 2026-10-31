@@ -1,20 +1,27 @@
 package com.diyp.next.player.preload;
 
 import java.io.IOException;
+import java.util.ArrayDeque;
 
 /**
- * Lightweight in-memory circular GOP buffer for IPTV MPEG-TS streams.
- * Capacity: 2.0 MB (~1.5-2.0s of an 8-10 Mbps multicast TS stream).
+ * In-memory circular GOP buffer for IPTV MPEG-TS streams.
+ * Capacity: 10 MB (roughly 5-20s of a 4-16 Mbps multicast TS stream), so the latest
+ * keyframe is virtually always retained and channel switching can start from it.
  * Tracks PAT (PID 0) and Keyframes (H.264 IDR/SPS, H.265 VPS/SPS/IDR, TS random_access_indicator).
- * Supports zero-allocation sliding inspection and instant memory-speed replay for ExoPlayer.
+ * Buffers are pooled (at most 3, one per live preload worker) to avoid repeated multi-MB allocations.
  */
 public class GopRingBuffer {
-    public static final int CAPACITY = 2 * 1024 * 1024; // 2.0 MB
+    public static final int CAPACITY = 10 * 1024 * 1024; // 10 MB
     private static final int TS_PACKET_SIZE = 188;
+    private static final int MAX_POOLED = 3;
+
+    private static final ArrayDeque<GopRingBuffer> POOL = new ArrayDeque<>(MAX_POOLED);
+    private static boolean poolEnabled = true;
 
     private final byte[] buffer = new byte[CAPACITY];
     private final Object lock = new Object();
 
+    private long generation = 0;
     private long totalWritten = 0;
     private long lastInspectedPos = 0;
     private long lastPatPos = -1;
@@ -30,13 +37,88 @@ public class GopRingBuffer {
     public GopRingBuffer() {}
 
     /**
-     * Producer: Write incoming TS stream data into circular buffer.
+     * Obtains a buffer from the pool (lazily allocated on first use) and resets its state.
      */
-    public void write(byte[] data, int offset, int length) {
+    public static synchronized GopRingBuffer obtain() {
+        poolEnabled = true;
+        GopRingBuffer recycled = POOL.pollLast();
+        GopRingBuffer rb = (recycled != null) ? recycled : new GopRingBuffer();
+        rb.resetForReuse();
+        return rb;
+    }
+
+    /**
+     * Drops all pooled buffers, e.g. when preloading is stopped entirely.
+     */
+    public static synchronized void clearPool() {
+        POOL.clear();
+        poolEnabled = false;
+    }
+
+    private static synchronized void recycle(GopRingBuffer rb) {
+        if (!poolEnabled || POOL.size() >= MAX_POOLED) {
+            return;
+        }
+        POOL.offerLast(rb);
+    }
+
+    private void resetForReuse() {
+        synchronized (lock) {
+            generation++;
+            totalWritten = 0;
+            lastInspectedPos = 0;
+            lastPatPos = -1;
+            lastIFramePos = -1;
+            currentKeyframePatPos = -1;
+            prevKeyframePatPos = -1;
+            hasKeyframe = false;
+            isClosed = false;
+            readPos = -1;
+        }
+    }
+
+    public long getGeneration() {
+        synchronized (lock) {
+            return generation;
+        }
+    }
+
+    /**
+     * Returns true if this buffer still belongs to the given generation and is not closed.
+     */
+    public boolean isOwnedBy(long gen) {
+        synchronized (lock) {
+            return !isClosed && gen == generation;
+        }
+    }
+
+    /**
+     * Freezes the buffer without returning it to the pool (e.g. stream ended unexpectedly).
+     */
+    public void close() {
+        synchronized (lock) {
+            isClosed = true;
+            lock.notifyAll();
+        }
+    }
+
+    /**
+     * Freezes the buffer and hands it back to the pool so the array can be reused.
+     */
+    public void release() {
+        close();
+        recycle(this);
+    }
+
+    /**
+     * Producer: Write incoming TS stream data into circular buffer.
+     * Writes from a stale generation (worker already released the buffer) are ignored.
+     */
+    public void write(byte[] data, int offset, int length, long gen) {
         if (data == null || length <= 0) return;
 
         synchronized (lock) {
-            if (isClosed) return;
+            if (isClosed || gen != generation) return;
 
             // Copy data into ring buffer
             for (int i = 0; i < length; i++) {
@@ -224,11 +306,16 @@ public class GopRingBuffer {
     /**
      * Consumer: Read data from ring buffer into destination array.
      * Blocks if buffer is temporarily exhausted and writer is still active.
+     * Returns -1 if the buffer was recycled by another worker (stale generation).
      */
-    public int read(byte[] out, int offset, int length) throws IOException {
+    public int read(byte[] out, int offset, int length, long gen) throws IOException {
         if (out == null || length <= 0) return 0;
 
         synchronized (lock) {
+            if (gen != generation) {
+                return -1;
+            }
+
             if (readPos < 0) {
                 startPlaybackFromKeyframe();
             }
@@ -257,16 +344,6 @@ public class GopRingBuffer {
             }
             readPos += toRead;
             return toRead;
-        }
-    }
-
-    /**
-     * Close buffer and unblock waiting consumer threads.
-     */
-    public void close() {
-        synchronized (lock) {
-            isClosed = true;
-            lock.notifyAll();
         }
     }
 
