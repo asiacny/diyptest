@@ -246,19 +246,6 @@ public class VideoPlayerManager {
 
     private void initPlayer() {
         int decoderMode = SettingsRepository.get().getDecoderMode();
-        int extensionMode;
-        switch (decoderMode) {
-            case 1: // 软解优先 (FFmpeg)
-                extensionMode = DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER;
-                break;
-            case 2: // 系统原生
-                extensionMode = DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF;
-                break;
-            case 0: // 智能硬解
-            default:
-                extensionMode = DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON;
-                break;
-        }
 
         DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(context) {
             @Override
@@ -275,7 +262,7 @@ public class VideoPlayerManager {
                 MediaCodecVideoRenderer videoRenderer = new MediaCodecVideoRenderer(
                         context,
                         getCodecAdapterFactory(),
-                        mediaCodecSelector,
+                        orderVideoDecoders(mediaCodecSelector, decoderMode),
                         allowedVideoJoiningTimeMs,
                         enableDecoderFallback,
                         eventHandler,
@@ -357,7 +344,7 @@ public class VideoPlayerManager {
                     return filtered;
                 };
 
-                if (audioMode == 0) { // 智能硬解 (硬件优先，自动软解回退，与视频解码选项一致)
+                if (audioMode == 0) { // 智能解码 (硬件优先，自动软解)
                     out.add(createTrackedAudioRenderer(
                             context,
                             safeAudioSelector,
@@ -377,7 +364,7 @@ public class VideoPlayerManager {
                         Renderer ffmpegRenderer = (Renderer) constructor.newInstance(eventHandler, trackedFfmpegListener(eventListener), audioSink);
                         out.add(ffmpegRenderer);
                     } catch (Exception ignored) {}
-                } else if (audioMode == 1) { // 软解优先 (FFmpeg 强力软解)
+                } else if (audioMode == 1) { // 强制软解 (FFmpeg)
                     // 1. First add FfmpegAudioRenderer directly at index 0
                     try {
                         Class<?> clazz = Class.forName("androidx.media3.decoder.ffmpeg.FfmpegAudioRenderer");
@@ -456,8 +443,7 @@ public class VideoPlayerManager {
                 out.add(tr);
             }
         };
-        renderersFactory.setExtensionRendererMode(extensionMode)
-                .setEnableDecoderFallback(true);
+        renderersFactory.setEnableDecoderFallback(true);
 
         // Configure TS Extractor for fast startup without prolonged probing
         DefaultExtractorsFactory extractorsFactory = new DefaultExtractorsFactory()
@@ -618,6 +604,29 @@ public class VideoPlayerManager {
                 }
             }
         });
+    }
+
+    private static boolean isSoftwareDecoder(MediaCodecInfo info) {
+        return info.softwareOnly || !info.hardwareAccelerated;
+    }
+
+    private static MediaCodecSelector orderVideoDecoders(MediaCodecSelector delegate, int decoderMode) {
+        if (decoderMode == 2) {
+            return delegate;
+        }
+        final boolean softwareFirst = (decoderMode == 1);
+        return (mimeType, requiresSecureDecoder, requiresTunnelingDecoder) -> {
+            List<MediaCodecInfo> infos = delegate.getDecoderInfos(mimeType, requiresSecureDecoder, requiresTunnelingDecoder);
+            if (infos == null || infos.size() < 2) {
+                return infos;
+            }
+            // MediaCodecUtil returns cached unmodifiable lists, so copy before stable partition
+            List<MediaCodecInfo> ordered = new ArrayList<>(infos);
+            Collections.sort(ordered, (a, b) -> softwareFirst
+                    ? Boolean.compare(isSoftwareDecoder(b), isSoftwareDecoder(a))
+                    : Boolean.compare(isSoftwareDecoder(a), isSoftwareDecoder(b)));
+            return ordered;
+        };
     }
 
     private AudioRendererEventListener trackedFfmpegListener(@Nullable AudioRendererEventListener delegate) {

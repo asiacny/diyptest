@@ -65,15 +65,15 @@ public class SettingsRepository {
     public static final int[] TIMEOUT_VALUES = {0, 3, 5, 10, 15, 20, 30};
 
     public static final String[] DECODER_OPTIONS = {
-        "智能硬解 (硬件加速，自动软解回退)",
-        "软解优先 (FFmpeg 强力软解)",
+        "智能硬解 (硬件优先)",
+        "软解优先 (兼容性最好)",
         "系统原生 (Android 原生解码)"
     };
 
     public static final String[] AUDIO_DECODER_OPTIONS = {
-        "智能硬解 (硬件加速，自动软解回退)",
-        "软解优先 (FFmpeg 强力软解)",
-        "系统原生 (仅系统硬解/直通)"
+        "智能解码 (硬件优先，自动软解)",
+        "强制软解 (兼容性最佳)",
+        "系统原生 (仅硬解/直通)"
     };
 
     // Defaults
