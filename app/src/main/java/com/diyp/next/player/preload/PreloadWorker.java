@@ -154,6 +154,11 @@ public class PreloadWorker implements Runnable {
         return isConnected && !isAborted && ringBuffer.hasKeyframe();
     }
 
+    public boolean isUsable() {
+        return isRunning && isConnected && !isAborted
+                && ringBuffer.hasKeyframe() && !ringBuffer.isClosed();
+    }
+
     public boolean isAborted() {
         return isAborted;
     }

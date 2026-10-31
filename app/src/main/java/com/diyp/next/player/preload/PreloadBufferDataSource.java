@@ -22,6 +22,7 @@ public class PreloadBufferDataSource extends BaseDataSource {
     private final PreloadWorker worker;
     private DataSpec dataSpec;
     private boolean opened = false;
+    private boolean released = false;
 
     public PreloadBufferDataSource(PreloadWorker worker) {
         super(/* isNetwork= */ true);
@@ -81,12 +82,16 @@ public class PreloadBufferDataSource extends BaseDataSource {
 
     @Override
     public void close() throws IOException {
+        if (released) {
+            return;
+        }
+        released = true;
         if (opened) {
             opened = false;
             transferEnded();
         }
         if (worker != null) {
-            worker.stop();
+            PreloadChannelManager.getInstance().reclaim(worker);
         }
     }
 }

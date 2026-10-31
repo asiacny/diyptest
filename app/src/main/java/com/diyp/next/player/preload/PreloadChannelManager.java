@@ -25,7 +25,9 @@ public class PreloadChannelManager {
     private static volatile PreloadChannelManager instance;
 
     private final Map<String, PreloadWorker> activeWorkers = new ConcurrentHashMap<>();
+    private final Set<String> currentTargets = new HashSet<>();
     private String currentPlayingUrl = "";
+    private String playingUrl = "";
 
     public static PreloadChannelManager getInstance() {
         if (instance == null) {
@@ -70,6 +72,7 @@ public class PreloadChannelManager {
         }
 
         if (activeIdx == -1) {
+            currentTargets.clear();
             return;
         }
 
@@ -89,6 +92,8 @@ public class PreloadChannelManager {
         for (TargetSource t : targets) {
             targetUrls.add(t.cleanUrl);
         }
+        currentTargets.clear();
+        currentTargets.addAll(targetUrls);
 
         // 1. Evict any running worker that is no longer in target set or is currently playing
         for (Map.Entry<String, PreloadWorker> entry : activeWorkers.entrySet()) {
@@ -106,6 +111,10 @@ public class PreloadChannelManager {
         // 2. Launch new workers for targets not yet running
         for (TargetSource t : targets) {
             if (t.cleanUrl.equals(currentPlayingUrl)) {
+                continue;
+            }
+            // Still playing from its own preload buffer: it will be reclaimed on close
+            if (!playingUrl.isEmpty() && t.cleanUrl.equals(playingUrl)) {
                 continue;
             }
 
@@ -178,6 +187,7 @@ public class PreloadChannelManager {
 
         if (worker.isReady()) {
             activeWorkers.remove(trimmed);
+            playingUrl = trimmed;
             Log.i(TAG, "Preload cache HIT for " + worker.getChannelName() + ": " + trimmed);
             return () -> new PreloadBufferDataSource(worker);
         } else {
@@ -185,6 +195,36 @@ public class PreloadChannelManager {
             worker.stop();
             activeWorkers.remove(trimmed);
             return null;
+        }
+    }
+
+    /**
+     * Returns a worker whose playback just ended back to the preload pool, keeping its live
+     * connection and buffered GOPs so switching back to the previous channel can be instant.
+     */
+    public synchronized void reclaim(PreloadWorker worker) {
+        if (worker == null) return;
+        String url = worker.getStreamUrl();
+        if (url != null && url.equals(playingUrl)) {
+            playingUrl = "";
+        }
+        SettingsRepository settings = SettingsRepository.get();
+        if (url == null || !worker.isUsable() || !currentTargets.contains(url)
+                || settings == null || !settings.isPreloadEnabled()
+                || !PreloadFilter.isPreloadEligible(url)) {
+            worker.stop();
+            return;
+        }
+        PreloadWorker existing = activeWorkers.get(url);
+        if (existing == null) {
+            activeWorkers.put(url, worker);
+            Log.i(TAG, "Reclaimed live buffer for " + worker.getChannelName() + ": " + url);
+        } else if (existing.isReady()) {
+            worker.stop();
+        } else {
+            existing.stop();
+            activeWorkers.put(url, worker);
+            Log.i(TAG, "Replaced warming preload with reclaimed buffer for " + worker.getChannelName());
         }
     }
 
@@ -198,6 +238,8 @@ public class PreloadChannelManager {
             }
         }
         activeWorkers.clear();
+        currentTargets.clear();
+        playingUrl = "";
         Log.d(TAG, "All preload workers stopped");
     }
 

@@ -765,6 +765,12 @@ public class PlayerActivity extends AppCompatActivity {
             epgAdapter.clear();
         }
 
+        // Update preload targets before switching so the previous buffered stream can be
+        // reclaimed into the pool instead of being torn down
+        if (!isTimeShiftMode && allChannels != null && allChannels.size() > 1) {
+            PreloadChannelManager.getInstance().updateActiveChannel(channel, allChannels, settings);
+        }
+
         // Start playback
         showLoading(true);
         playerManager.playChannel(channel);
@@ -772,11 +778,6 @@ public class PlayerActivity extends AppCompatActivity {
         // Show banner and update EPG
         showChannelBanner(channel);
         loadEpgForChannel(channel);
-
-        // Schedule smart preloading for adjacent N-1 and N+1 channels across global allChannels list
-        if (!isTimeShiftMode && allChannels != null && allChannels.size() > 1) {
-            PreloadChannelManager.getInstance().updateActiveChannel(channel, allChannels, settings);
-        }
     }
 
     private void showChannelBanner(Channel channel) {
