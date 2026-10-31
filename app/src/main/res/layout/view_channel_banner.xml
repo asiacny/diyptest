@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/layout_channel_banner"
     android:layout_width="600dp"
     android:layout_height="wrap_content"
     android:layout_gravity="center_horizontal|bottom"
     android:layout_marginBottom="24dp"
     android:background="@drawable/bg_banner_card"
-    android:orientation="horizontal"
-    android:gravity="center_vertical"
     android:padding="12dp"
     android:visibility="gone">
 
@@ -17,15 +16,23 @@
         android:layout_width="72dp"
         android:layout_height="48dp"
         android:scaleType="fitCenter"
-        android:layout_marginEnd="12dp"
-        android:visibility="visible" />
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Number, Name, Progress, EPG -->
     <LinearLayout
+        android:id="@+id/banner_layout_info"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical">
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="14dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toStartOf="@id/banner_layout_side"
+        app:layout_constraintStart_toEndOf="@id/banner_iv_logo"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_goneMarginStart="0dp">
 
         <!-- Top Row: Number & Name -->
         <LinearLayout
@@ -113,33 +120,39 @@
 
         </LinearLayout>
 
-        <!-- Stream Parameters Badge Tags (Resolution, Codec, Framerate, Color/HDR, Audio, Bitrate) -->
-        <HorizontalScrollView
-            android:id="@+id/banner_scroll_stream_tags"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:scrollbars="none"
-            android:overScrollMode="never"
-            android:layout_marginTop="4dp"
-            android:visibility="gone">
-
-            <LinearLayout
-                android:id="@+id/banner_layout_stream_tags"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical" />
-        </HorizontalScrollView>
-
     </LinearLayout>
+
+    <!-- Stream Parameters Badge Tags (Resolution, Codec, Framerate, Color/HDR, Audio, Bitrate) -->
+    <HorizontalScrollView
+        android:id="@+id/banner_scroll_stream_tags"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:overScrollMode="never"
+        android:layout_marginTop="4dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/banner_layout_info"
+        app:layout_constraintTop_toBottomOf="@id/banner_layout_info">
+
+        <LinearLayout
+            android:id="@+id/banner_layout_stream_tags"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical" />
+    </HorizontalScrollView>
 
     <!-- Right Side: Source, TimeShift Badge, Clock -->
     <LinearLayout
+        android:id="@+id/banner_layout_side"
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="end|center_vertical"
-        android:layout_marginStart="14dp">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <TextView
             android:id="@+id/banner_tv_source"
@@ -176,4 +189,4 @@
 
     </LinearLayout>
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
