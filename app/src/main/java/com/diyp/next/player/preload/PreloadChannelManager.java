@@ -95,10 +95,11 @@ public class PreloadChannelManager {
         currentTargets.clear();
         currentTargets.addAll(targetUrls);
 
-        // 1. Evict any running worker that is no longer in target set or is currently playing
+        // 1. Evict workers that are neither adjacent targets nor the channel about to play.
+        // The channel about to play is kept so takePreload() can consume its buffer right after.
         for (Map.Entry<String, PreloadWorker> entry : activeWorkers.entrySet()) {
             String url = entry.getKey();
-            if (!targetUrls.contains(url) || url.equals(currentPlayingUrl)) {
+            if (!targetUrls.contains(url) && !url.equals(currentPlayingUrl)) {
                 PreloadWorker worker = entry.getValue();
                 if (worker != null) {
                     worker.stop();
