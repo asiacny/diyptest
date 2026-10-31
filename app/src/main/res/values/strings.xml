@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">电视直播</string>
+    <string name="now_playing">正在播放：</string>
+    <string name="next_playing">下一节目：</string>
+    <string name="no_epg_info">暂无节目信息</string>
+    <string name="source_format">源%1$d/%2$d</string>
+    <string name="all_channels">全部频道</string>
+    <string name="favorite_group">我的收藏</string>
+    <string name="exit_prompt">再次点击返回键退出程序</string>
+    <string name="speed_format">%1$d KB/s</string>
+    
+    <!-- Settings strings -->
+    <string name="settings_title">播放设置</string>
+    <string name="setting_decoder">解码方式</string>
+    <string name="setting_scale">画面比例</string>
+    <string name="setting_timeout">超时换源</string>
+    <string name="setting_source">当前线路</string>
+    <string name="setting_channel_style">列表风格</string>
+    <string name="setting_reverse_switch">换台反转</string>
+    <string name="setting_boot_start">开机自启</string>
+    <string name="setting_show_speed">显示网速</string>
+    <string name="setting_show_time">显示时间</string>
+    <string name="setting_hide_num">隐藏台号</string>
+    <string name="setting_eye_protect">护眼模式</string>
+    <string name="setting_custom_source">自定义源地址</string>
+    <string name="setting_custom_epg">自定义EPG地址</string>
+    <string name="setting_reset">重置为默认</string>
+    <string name="btn_save">保存</string>
+    <string name="btn_cancel">取消</string>
+</resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#181E28</color>
+    <color name="colorPrimaryDark">#000000</color>
+    <color name="colorAccent">#00D2FF</color>
+
+    <color name="text_white">#FFFFFF</color>
+    <color name="text_gray">#ACABA7</color>
+    <color name="text_highlight">#00D2FF</color>
+    <color name="text_sub">#80FFFFFF</color>
+
+    <color name="bg_panel_dark">#E6181E28</color>
+    <color name="bg_panel_light">#B3384354</color>
+    <color name="bg_panel_epg">#CC181E28</color>
+    <color name="bg_item_focus">#4000D2FF</color>
+    <color name="bg_item_selected">#30FFFFFF</color>
+    <color name="bg_badge">#40FFFFFF</color>
+    <color name="divider_line">#33FFFFFF</color>
+</resources>

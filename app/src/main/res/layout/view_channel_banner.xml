@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_channel_banner"
+    android:layout_width="600dp"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_horizontal|bottom"
+    android:layout_marginBottom="24dp"
+    android:background="@drawable/bg_banner_card"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="12dp"
+    android:visibility="gone">
+
+    <!-- Channel Logo (Left) -->
+    <ImageView
+        android:id="@+id/banner_iv_logo"
+        android:layout_width="72dp"
+        android:layout_height="48dp"
+        android:scaleType="fitCenter"
+        android:layout_marginEnd="12dp"
+        android:visibility="visible" />
+
+    <!-- Number, Name, Progress, EPG -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!-- Top Row: Number & Name -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/banner_tv_number"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="32sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_white"
+                android:layout_marginEnd="10dp" />
+
+            <TextView
+                android:id="@+id/banner_tv_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_white"
+                android:singleLine="true"
+                android:ellipsize="end" />
+
+        </LinearLayout>
+
+        <!-- Progress Bar -->
+        <ProgressBar
+            android:id="@+id/banner_progress_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="#ff009cff" />
+
+        <!-- EPG: Now Playing -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="正在播放："
+                android:textSize="13sp"
+                android:textColor="#ffacaba7" />
+
+            <com.diyp.next.ui.view.ScrollTextView
+                android:id="@+id/banner_tv_now_playing"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:textColor="#ffacaba7" />
+
+        </LinearLayout>
+
+        <!-- EPG: Next Playing -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="2dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="下一节目："
+                android:textSize="13sp"
+                android:textColor="#ffacaba7" />
+
+            <com.diyp.next.ui.view.ScrollTextView
+                android:id="@+id/banner_tv_next_playing"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:textColor="#ffacaba7" />
+
+        </LinearLayout>
+
+        <!-- Stream Parameters Badge Tags (Resolution, Codec, Framerate, Color/HDR, Audio, Bitrate) -->
+        <HorizontalScrollView
+            android:id="@+id/banner_scroll_stream_tags"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:overScrollMode="never"
+            android:layout_marginTop="4dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/banner_layout_stream_tags"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical" />
+        </HorizontalScrollView>
+
+    </LinearLayout>
+
+    <!-- Right Side: Source, TimeShift Badge, Clock -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="end|center_vertical"
+        android:layout_marginStart="14dp">
+
+        <TextView
+            android:id="@+id/banner_tv_source"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="13sp"
+            android:textColor="#ffacaba7"
+            android:text="源1/1" />
+
+        <TextView
+            android:id="@+id/banner_tv_timeshift"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="10sp"
+            android:textColor="#ff00d2ff"
+            android:background="@drawable/bg_badge_timeshift"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:paddingTop="1dp"
+            android:paddingBottom="1dp"
+            android:layout_marginTop="4dp"
+            android:text="可时移"
+            android:visibility="gone" />
+
+        <TextClock
+            android:id="@+id/banner_clock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="13sp"
+            android:textColor="#ffacaba7"
+            android:layout_marginTop="4dp"
+            android:format12Hour="HH:mm EE"
+            android:format24Hour="HH:mm EE" />
+
+    </LinearLayout>
+
+</LinearLayout>

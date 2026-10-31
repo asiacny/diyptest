@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_player_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black"
+    android:keepScreenOn="true">
+
+    <!-- Video Surface Frame -->
+    <androidx.media3.ui.AspectRatioFrameLayout
+        android:id="@+id/aspect_ratio_frame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center">
+
+        <SurfaceView
+            android:id="@+id/surface_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <!-- Shutter Cover: 避免切源时上一频道的最后一帧画面冻结残留 -->
+        <View
+            android:id="@+id/view_surface_shutter"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/black"
+            android:visibility="gone" />
+
+        <androidx.media3.ui.SubtitleView
+            android:id="@+id/subtitle_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </androidx.media3.ui.AspectRatioFrameLayout>
+
+    <!-- Startup / Splash Image Cover -->
+    <ImageView
+        android:id="@+id/iv_splash"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:background="@android:color/black"
+        android:visibility="visible" />
+
+    <!-- Top-Left: Time-Shift Status & Controls Header -->
+    <LinearLayout
+        android:id="@+id/layout_timeshift_header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start|top"
+        android:layout_margin="16dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_badge_rounded"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:visibility="gone">
+
+        <!-- Dynamic Status & Clock (e.g. ● 回看中 | 2026-10-29 12:00:00 (落后 2小时)) -->
+        <TextView
+            android:id="@+id/tv_timeshift_dynamic_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="13sp"
+            android:textColor="#ffff4444"
+            android:textStyle="bold"
+            android:text="● 回看中" />
+
+        <!-- Speed Button (e.g. 1.0x / 1.25x / 1.5x / 2.0x) -->
+        <TextView
+            android:id="@+id/btn_timeshift_speed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorAccent"
+            android:background="@drawable/bg_badge_timeshift"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:clickable="true"
+            android:text="1.0x" />
+
+    </LinearLayout>
+
+    <!-- Top-Right: Clock & Network Speed -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|top"
+        android:layout_margin="16dp"
+        android:orientation="vertical"
+        android:gravity="end">
+
+        <TextClock
+            android:id="@+id/tv_top_clock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_white"
+            android:background="@drawable/bg_badge_rounded"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
+            android:format12Hour="HH:mm:ss"
+            android:format24Hour="HH:mm:ss" />
+
+        <TextView
+            android:id="@+id/tv_net_speed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="@color/colorAccent"
+            android:background="@drawable/bg_badge_rounded"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:layout_marginTop="6dp"
+            android:text="0 KB/s" />
+
+    </LinearLayout>
+
+    <!-- Center: Loading / Buffering Indicator -->
+    <ProgressBar
+        android:id="@+id/pb_loading"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:indeterminateTint="@color/colorAccent"
+        android:visibility="gone" />
+
+    <!-- Center: Quick Channel Number Input Display (e.g. 05) -->
+    <TextView
+        android:id="@+id/tv_quick_channel_num"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textSize="72sp"
+        android:textStyle="bold"
+        android:textColor="@color/colorAccent"
+        android:background="@drawable/bg_banner_rounded"
+        android:padding="20dp"
+        android:visibility="gone" />
+
+    <!-- Center: Status / Error Toast message -->
+    <TextView
+        android:id="@+id/tv_status_toast"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textSize="18sp"
+        android:textColor="@color/text_white"
+        android:background="@drawable/bg_banner_rounded"
+        android:padding="16dp"
+        android:visibility="gone" />
+
+    <!-- Bottom: Channel Info Banner -->
+    <include layout="@layout/view_channel_banner" />
+
+    <!-- Left: Channel Overlay Menu (3-Column) -->
+    <include layout="@layout/view_channel_menu" />
+
+</FrameLayout>

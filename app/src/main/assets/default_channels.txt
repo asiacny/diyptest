@@ -1,0 +1,16 @@
+央视频道,#genre#,http://epg.51zmt.top:8000/api/diyp/
+CCTV-1 综合,http://vfx.mtime.cn/Video/2019/02/04/mp4/190204084208765161.mp4#http://vfx.mtime.cn/Video/2019/03/19/mp4/190319213527658546.mp4
+CCTV-2 财经,http://vfx.mtime.cn/Video/2019/03/19/mp4/190319222227698228.mp4
+CCTV-3 综艺,http://vfx.mtime.cn/Video/2019/03/18/mp4/190318231014076505.mp4
+CCTV-4 中文国际,http://vfx.mtime.cn/Video/2019/03/18/mp4/190318214226685784.mp4
+CCTV-5 体育,http://vfx.mtime.cn/Video/2019/03/19/mp4/190319104618910544.mp4
+CCTV-6 电影,http://vfx.mtime.cn/Video/2019/03/19/mp4/190319125415785695.mp4
+CCTV-13 新闻,http://vfx.mtime.cn/Video/2019/03/17/mp4/190317150237409904.mp4
+卫视频道,#genre#
+湖南卫视,http://vfx.mtime.cn/Video/2019/03/14/mp4/190314223540873330.mp4
+浙江卫视,http://vfx.mtime.cn/Video/2019/03/13/mp4/190313094901111138.mp4
+江苏卫视,http://vfx.mtime.cn/Video/2019/03/12/mp4/190312083533415853.mp4
+东方卫视,http://vfx.mtime.cn/Video/2019/03/09/mp4/190309153658147087.mp4
+组播内网示例,#genre#
+北京卫视单播(示例),http://192.168.1.1:8080/rtp/239.0.0.1:5140
+CCTV-1单播(示例),http://192.168.1.1:8080/rtp/239.0.0.2:5140

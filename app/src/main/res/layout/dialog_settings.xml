@@ -1,0 +1,453 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="320dp"
+    android:layout_height="match_parent"
+    android:background="@color/bg_panel_dark"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Header Title -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="12dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_title"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorAccent" />
+
+    </LinearLayout>
+
+    <!-- Scheme 2: Top Horizontal Tab Bar (顶部横向 Tab 胶囊分栏) -->
+    <HorizontalScrollView
+        android:id="@+id/scroll_settings_tabs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:fadingEdge="none"
+        android:layout_marginBottom="10dp">
+
+        <LinearLayout
+            android:id="@+id/layout_settings_tabs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/tab_playback"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="当前播放"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_tab_capsule"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:layout_marginEnd="6dp" />
+
+            <Button
+                android:id="@+id/tab_behavior"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="操作偏好"
+                android:textSize="12sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_tab_capsule"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:layout_marginEnd="6dp" />
+
+            <Button
+                android:id="@+id/tab_ui"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="界面显示"
+                android:textSize="12sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_tab_capsule"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:layout_marginEnd="6dp" />
+
+            <Button
+                android:id="@+id/tab_system"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="系统核心"
+                android:textSize="12sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_tab_capsule"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp" />
+
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/divider_line"
+        android:layout_marginBottom="10dp" />
+
+    <!-- Tab 1 Panel: 当前播放 (Playback & Tracks) -->
+    <ScrollView
+        android:id="@+id/scroll_tab_playback"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scrollbars="none"
+        android:visibility="visible">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- 当前线路切换 -->
+            <Button
+                android:id="@+id/btn_setting_source"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="当前线路: 源 1/1"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- 音轨选择 -->
+            <Button
+                android:id="@+id/btn_setting_audio_track"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="音轨选择: 默认音轨"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- 画面比例 -->
+            <Button
+                android:id="@+id/btn_setting_scale"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="画面比例: 16:9"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- 字幕选择 (内置与外挂字幕) -->
+            <Button
+                android:id="@+id/btn_setting_subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="字幕选择: 关闭"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- 播放倍速 (时移或点播源) -->
+            <Button
+                android:id="@+id/btn_setting_speed_rate"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="播放倍速: 1.0x"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- 窗口播放 (画中画) -->
+            <Button
+                android:id="@+id/btn_setting_pip"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="窗口播放 (画中画模式)"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Tab 2 Panel: 操作偏好 (Behavior & Control) -->
+    <ScrollView
+        android:id="@+id/scroll_tab_behavior"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scrollbars="none"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- 超时换源 -->
+            <Button
+                android:id="@+id/btn_setting_timeout"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="超时换源: 5秒"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- 断流控制 -->
+            <Button
+                android:id="@+id/btn_setting_disconnect"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="断流控制: 关闭"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- 记忆播放 -->
+            <Button
+                android:id="@+id/btn_setting_remember_play"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="记忆播放: 开启"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- 记忆多源 -->
+            <Button
+                android:id="@+id/btn_setting_remember_source"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="记忆多源: 开启"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- 极速秒切 (频道智能预热) -->
+            <Button
+                android:id="@+id/btn_setting_preload"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="极速秒切: 开启 (智能组播)"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- OK键功能 -->
+            <Button
+                android:id="@+id/btn_setting_ok_action"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="OK键功能: 打开列表"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- 换台反转 -->
+            <Button
+                android:id="@+id/btn_setting_reverse"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="换台方向: 正常 (上加下减)"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Tab 3 Panel: 界面显示 (UI Display & OSD) -->
+    <ScrollView
+        android:id="@+id/scroll_tab_ui"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scrollbars="none"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- 台标显示设置 -->
+            <Button
+                android:id="@+id/btn_setting_logo_mode"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="台标设置: 显示所有台标"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- 隐藏底栏台标 -->
+            <Button
+                android:id="@+id/btn_setting_hide_bottom_logo"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="底栏台标: 开启显示"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- 显示网速 -->
+            <Button
+                android:id="@+id/btn_setting_speed"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="显示网速: 开启"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- 显示时间 -->
+            <Button
+                android:id="@+id/btn_setting_time"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="显示时间: 开启"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Tab 4 Panel: 系统核心 (System Core & Interfaces) -->
+    <ScrollView
+        android:id="@+id/scroll_tab_system"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scrollbars="none"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- 视频解码 -->
+            <Button
+                android:id="@+id/btn_setting_decoder"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="视频解码: 智能硬解"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- 音频解码 (独立菜单) -->
+            <Button
+                android:id="@+id/btn_setting_audio_decoder"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="音频解码: 智能硬解"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- 接口设置 (二级菜单: 节目地址, EPG接口, 启动背景, UserAgent, 外部台标) -->
+            <Button
+                android:id="@+id/btn_setting_interface"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="接口设置"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- 开机自启 -->
+            <Button
+                android:id="@+id/btn_setting_boot"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="开机自启: 关闭"
+                android:textSize="14sp"
+                android:textColor="@color/text_white"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- 重置为默认设置 -->
+            <Button
+                android:id="@+id/btn_setting_reset"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="恢复默认配置"
+                android:textSize="14sp"
+                android:textColor="#FF5252"
+                android:background="@drawable/selector_item_focus"
+                android:gravity="start|center_vertical"
+                android:paddingStart="12dp"
+                android:layout_marginBottom="12dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

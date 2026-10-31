@@ -1,0 +1,109 @@
+name: Build Release APK
+
+on:
+  push:
+    branches: [ "**" ]
+    tags:
+      - "v*"
+  pull_request:
+    branches: [ "**" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & Sign Universal APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.4'
+
+      - name: Build APKs with Gradle
+        run: |
+          gradle assembleRelease --stacktrace
+
+      - name: Verify Gradle Output APKs
+        run: |
+          echo "Gradle 生成的原始 APK 列表："
+          ls -la app/build/outputs/apk/release/
+
+      - name: Sign APKs (Smart Keystore Detection)
+        env:
+          KEYSTORE_BASE64: ${{ secrets.APP_KEYSTORE_BASE64 }}
+          KEYSTORE_ALIAS: ${{ secrets.APP_KEYSTORE_ALIAS }}
+          KEYSTORE_PASSWORD: ${{ secrets.APP_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.APP_KEY_PASSWORD }}
+        run: |
+          mkdir -p signed_apks
+          curl -L -o uber-apk-signer.jar https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar
+
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "===> 检测到自定义机密签名库 (Custom Release Keystore)，使用正式私钥签名..."
+            echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
+
+            KEY_PASS_ARG=""
+            if [ -n "$KEY_PASSWORD" ]; then
+              KEY_PASS_ARG="--ksKeyPass $KEY_PASSWORD"
+            fi
+
+            java -jar uber-apk-signer.jar \
+              --apks app/build/outputs/apk/release \
+              --out signed_apks \
+              --ks release.keystore \
+              --ksAlias "$KEYSTORE_ALIAS" \
+              --ksPass "$KEYSTORE_PASSWORD" \
+              $KEY_PASS_ARG \
+              --allowResign
+          else
+            echo "===> 未配置机密签名变量，自动使用默认安全调试私钥 (Debug Keystore) 签名..."
+            java -jar uber-apk-signer.jar \
+              --apks app/build/outputs/apk/release \
+              --out signed_apks \
+              --allowResign
+          fi
+
+          echo "生成的签名安装包原始列表："
+          ls -la signed_apks/
+
+          mkdir -p release_apks
+          SIGNED_APK=$(find signed_apks/ -type f -name "*aligned-signed.apk" | head -n 1)
+          if [ -z "$SIGNED_APK" ]; then
+            SIGNED_APK=$(find signed_apks/ -type f -name "*.apk" | head -n 1)
+          fi
+          echo "选择的签名包: $SIGNED_APK"
+          cp "$SIGNED_APK" "release_apks/DIYP-Next-v1.0.0-b${{ github.run_number }}.apk"
+
+          echo "格式化后的最终发布安装包："
+          ls -la release_apks/
+
+      - name: Upload Built Universal APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: DIYP-Next-Build-${{ github.run_number }}
+          path: release_apks/*.apk
+          retention-days: 30
+
+      - name: Publish to GitHub Releases
+        if: github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v1.0.0-b{0}', github.run_number) }}"
+          name: "${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('DIYP-Next 调试构建版 (Build {0})', github.run_number) }}"
+          files: release_apks/*.apk
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
